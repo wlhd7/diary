@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Titles{% endblock %}
+
+{% block body %}
+  <style>
+    .title-row{ display:flex; align-items:center; }
+    .title-text{ white-space:nowrap; }
+    .title-dots{ flex:1; border-bottom:1px dotted #888; margin:0 0.5rem; height:0.6em; }
+    .title-tags{ white-space:nowrap; font-size:0.95rem; }
+    .title-tags a{ text-decoration:none; color:inherit; }
+    /* Make list look tidy */
+    .titles-list{ list-style:none; padding:0; margin:0; }
+    .titles-list li{ padding:0.4rem 0; }
+  </style>
+  <div style="margin-bottom:1rem">
+    <form method="get" action="{{ url_for('home.title') }}">
+      <label for="tag-filter">Filter by tag:</label>
+      <select id="tag-filter" name="tag" onchange="this.form.submit()">
+        <option value="">All tags</option>
+        {% for t in tags %}
+          <option value="{{ t.name }}" {% if selected_tag==t.name %}selected{% endif %}>{{ t.name }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button type="submit">Filter</button></noscript>
+    </form>
+  </div>
+
+  {% if entries %}
+    <ul class="titles-list">
+      {% for e in entries %}
+        <li>
+          <div class="title-row">
+            <div class="title-text"><a href="{{ url_for('diary.detail', id=e.id) }}">{{ e.title }}</a></div>
+            {% if e.tags %}
+              <div class="title-dots" aria-hidden="true"></div>
+              <div class="title-tags">
+                {% for t in e.tags.split(',') %}
+                  <a href="{{ url_for('home.preview') }}?tag={{ t|urlencode }}">{{ t }}</a>{% if not loop.last %}, {% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No entries yet.</p>
+  {% endif %}
+
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Tags{% endblock %}
+
+{% block body %}
+<p><a href="{{ url_for('tags.new') }}">Create new tag</a></p>
+
+{% if tags %}
+<table>
+  <thead>
+    <tr><th>Name</th><th>Usage</th><th>Actions</th></tr>
+  </thead>
+  <tbody>
+  {% for t in tags %}
+    <tr>
+      <td><a href="{{ url_for('home.preview') }}?tag={{ t.name|urlencode }}">{{ t.name }}</a></td>
+      <td>{{ t.usage_count }}</td>
+      <td>
+        <a href="{{ url_for('tags.edit', id=t.id) }}">Edit</a>
+        <form method="post" action="{{ url_for('tags.delete', id=t.id) }}" style="display:inline" onsubmit="return confirm('Delete this tag?');">
+          <button type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No tags yet.</p>
+{% endif %}
+
+{% endblock %}

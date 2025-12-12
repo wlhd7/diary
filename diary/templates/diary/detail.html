@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}{{ entry.title }}{% endblock %}
+{% block body %}
+
+    <h1>{{ entry.title }}</h1>
+    <p><small>Created: {{ entry.created_at }}</small></p>
+    <div class="content">
+        <pre>{{ entry.content }}</pre>
+    </div>
+
+    {% if session.user_id %}
+        <p><a href="{{ url_for('diary.edit', id=entry.id) }}">Edit</a></p>
+    {% endif %}
+
+
+{% endblock %}

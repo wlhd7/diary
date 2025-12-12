@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/preview.css') }}">
+{% endblock %}
+
+{% block title %}Preview{% endblock %}
+{% block body %}
+	{% if tag %}
+		<p>Filtering by tag: <strong>{{ tag }}</strong> — <a href="{{ url_for('home.preview') }}">clear</a></p>
+	{% endif %}
+
+	{% if entries %}
+		<ul>
+		{% for e in entries %}
+			<li>
+				<p class="title">{{ e.title }}</p>
+				<div class="entry-body" style="white-space: pre-wrap;">{{ e.content|e }}</div>
+				{% if e.tags %}
+					<p class="tags">Tags:
+					{% for t in e.tags.split(',') %}
+						<a href="{{ url_for('home.preview') }}?tag={{ t|urlencode }}">{{ t }}</a>{% if not loop.last %}, {% endif %}
+					{% endfor %}
+					</p>
+				{% endif %}
+			</li>
+		{% endfor %}
+		</ul>
+	{% else %}
+		<p>No entries yet.</p>
+	{% endif %}
+
+{% endblock %}

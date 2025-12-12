@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}New{% endblock %}
+{% block body %}
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				<ul class="flashes">
+					{% for category, message in messages %}
+						<li class="flash {{ category }}">{{ message }}</li>
+					{% endfor %}
+				</ul>
+			{% endif %}
+		{% endwith %}
+
+		<form method="post" action="{{ url_for('diary.new') }}">
+				<label for="title">Title</label>
+				<input id="title" name="title" value="{{ title|default('') }}" required>
+				<br>
+				<label for="content">Content</label>
+				<textarea id="content" name="content" rows="8">{{ content|default('') }}</textarea>
+				<br>
+				<label for="tags">Tags</label>
+				{% if tags %}
+				<!-- Hidden native select remains for form submission; a nicer multi-column checkbox UI is shown to the user -->
+				<select id="tags" name="tags" multiple style="display:none">
+					{% for t in tags %}
+						<option value="{{ t.id }}">{{ t.name }}</option>
+					{% endfor %}
+				</select>
+
+				<div id="tags-multicol" class="tags-multicol" aria-hidden="false">
+					{% for t in tags %}
+					<label><input type="checkbox" class="tag-checkbox" data-tag-id="{{ t.id }}"> {{ t.name }}</label>
+					{% endfor %}
+				</div>
+				<p class="hint">Select tags (click or use keyboard). <a href="{{ url_for('tags.new') }}">Create a new tag</a></p>
+				{% else %}
+					<p>No tags yet. <a href="{{ url_for('tags.new') }}">Create one</a></p>
+				{% endif %}
+				<br>
+				<button type="submit">Create</button>
+		</form>
+
+		<!-- Inline CSS & JS to render tags in multiple columns and sync with hidden select -->
+		<style>
+		.tags-multicol { column-count: 2; column-gap: 1rem; max-width: 600px; }
+		.tags-multicol label { display: block; margin: 0.2rem 0; cursor: pointer; }
+		.hint { font-size: 0.9rem; color: #444; }
+		</style>
+
+		<script>
+		(function(){
+		const form = document.querySelector('form');
+		if (!form) return;
+		  const select = document.getElementById('tags');
+		  const checkboxes = Array.from(document.querySelectorAll('.tag-checkbox'));
+
+		  function syncToSelect(){
+		    if (!select) return;
+		    Array.from(select.options).forEach(opt => opt.selected = false);
+		    checkboxes.forEach(cb => {
+		      if (cb.checked){
+		        const id = cb.getAttribute('data-tag-id');
+		        const opt = select.querySelector('option[value="' + id + '"]');
+		        if (opt) opt.selected = true;
+		      }
+		    });
+		  }
+
+		  // Optional: clicking a label toggles checkbox already handled by default
+		  checkboxes.forEach(cb => cb.addEventListener('change', syncToSelect));
+		  form.addEventListener('submit', function(){ syncToSelect(); });
+		})();
+		</script>
+
+	{% endblock %}

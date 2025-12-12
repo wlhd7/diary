@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Entries{% endblock %}
+{% block body %}
+
+    <h1>Diary Entries</h1>
+
+    {% if session.username %}
+        <p>Logged in as {{ session.username }} — <a href="{{ url_for('diary.new') }}">New Entry</a></p>
+    {% endif %}
+
+    {% if entries %}
+        <ul>
+        {% for e in entries %}
+            <li>
+                <a href="{{ url_for('diary.detail', id=e.id) }}">{{ e.title }}</a>
+                <small>— {{ e.created_at }}</small>
+                {% if session.user_id %}
+                    <a href="{{ url_for('diary.edit', id=e.id) }}">(edit)</a>
+                {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No entries yet.</p>
+    {% endif %}
+
+{% endblock %}

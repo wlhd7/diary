@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    {% block head %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <title>{% block title %}{% endblock %} - Diary</title>
+</head>
+
+<body>
+    <nav>
+      <a href="{{ url_for('home.preview') }}">Preview</a>
+      <a href="{{ url_for('home.title') }}">Title</a>
+      <a href="{{ url_for('diary.new') }}">New</a>
+      <a href="{{ url_for('tags.index') }}">Tags</a>
+    </nav>
+    {% block body %}{% endblock %}
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

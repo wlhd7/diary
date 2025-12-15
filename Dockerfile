@@ -1,4 +1,12 @@
-FROM python:3.11-slim
+ARG BASE_IMAGE=hub-mirror.c.163.com/library/python:3.11-slim
+FROM ${BASE_IMAGE}
+
+# If the mirror isn't accessible in your environment, override at build time:
+# docker build --build-arg BASE_IMAGE=python:3.11-slim -t diary .
+# or with compose (in `docker-compose.yml` under build.args):
+#   build:
+#     args:
+#       BASE_IMAGE: python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1
 

@@ -1,0 +1,21 @@
+[Unit]
+Description=Diary Gunicorn Service
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/diary/current
+Environment="PATH=/opt/diary/.venv/bin"
+EnvironmentFile=-/etc/default/diary
+ExecStart=/opt/diary/.venv/bin/gunicorn "diary:create_app()" \
+  --bind 127.0.0.1:8000 \
+  --workers 3 \
+  --worker-class gthread \
+  --threads 4
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

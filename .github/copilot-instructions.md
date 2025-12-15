@@ -13,7 +13,7 @@ Concise, actionable guidance for AI coding agents working in this repository so 
 - `diary/db.py` — `get_db()`, `close_db()`, `init_db(app)`; follow its API when changing DB behavior.
 - `diary/routes/` — blueprint handlers and URL structure (auth, diary, home, tags).
 - `instance/schema.sql` — canonical SQL schema applied by `flask init-db`.
-- `requirements.txt`, `Dockerfile`, `docker-compose.yml`, `deploy/nginx.conf` — runtime & deployment material.
+- `requirements.txt`, `deploy/nginx.conf` — runtime & deployment material.
 
 ## How to run & common developer commands
 - Local development (from repo root):
@@ -22,11 +22,7 @@ Concise, actionable guidance for AI coding agents working in this repository so 
   - Run: `flask run`
 - Initialize the DB (runs SQL in `instance/schema.sql` using app config):
   - `flask init-db`
-- Docker / container workflows:
-  - Populate `instance/.env` (runtime DB credentials, SECRET_KEY) referenced by `docker-compose.yml`.
-  - Build: `docker compose build`
-  - Start: `docker compose up -d`
-  - Init DB inside container: `docker compose run --rm web flask init-db`
+
 
 ## Project-specific conventions & patterns
 - Application factory pattern only — avoid importing a global `app` object. Use `create_app()` to construct app with config.

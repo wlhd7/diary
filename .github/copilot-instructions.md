@@ -12,8 +12,8 @@ Concise, actionable guidance for AI coding agents working in this repository so 
 - `diary/__init__.py` — application factory, blueprint registration, loads `instance/config.py` if present.
 - `diary/db.py` — `get_db()`, `close_db()`, `init_db(app)`; follow its API when changing DB behavior.
 - `diary/routes/` — blueprint handlers and URL structure (auth, diary, home, tags).
-- `instance/schema.sql` — canonical SQL schema applied by `flask init-db`.
-- `requirements.txt`, `deploy/nginx.conf` — runtime & deployment material.
+-- `instance/schema.sql` — canonical SQL schema applied by `flask init-db`.
+- `requirements.txt` — runtime dependencies. Deployment artifacts were removed from the repository; ask the repo owner for current deployment instructions.
 
 ## How to run & common developer commands
 - Local development (from repo root):
@@ -22,6 +22,8 @@ Concise, actionable guidance for AI coding agents working in this repository so 
   - Run: `flask run`
 - Initialize the DB (runs SQL in `instance/schema.sql` using app config):
   - `flask init-db`
+
+Note: container / compose configuration and `deploy/` artifacts were removed from this repo. If you need container-based workflows or a reverse-proxy config, request current deployment guidance from the repo owner or add new deployment manifests.
 
 
 ## Project-specific conventions & patterns
@@ -53,4 +55,4 @@ Concise, actionable guidance for AI coding agents working in this repository so 
 - Before adding new heavy frameworks (ORMs, migrations, or task queues).
 - Before changing the public API or directory layout.
 
-If you'd like, I can add a short `instance/config.py.example`, or wire an Alembic migration setup. Any section you want expanded or clarified?
+If you'd like, I can add a short `instance/config.py.example`, document a recommended deployment approach, or wire an Alembic migration setup. Which would help most?

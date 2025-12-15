@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=hub-mirror.c.163.com/library/python:3.11-slim
+ARG BASE_IMAGE=mirror.ccs.tencentyun.com/library/python:3.11-slim
 FROM ${BASE_IMAGE}
 
 # If the mirror isn't accessible in your environment, override at build time:

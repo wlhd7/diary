@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "diary"
+version = "0.1.0"
+description = "Minimal Flask diary app"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [ { name = "Repository Owner" } ]
+dependencies = [
+  "Flask>=2.0",
+  "PyMySQL>=1.0",
+  "cryptography>=3.4.8",
+]
+
+[tool.setuptools]
+packages = { find = {} }

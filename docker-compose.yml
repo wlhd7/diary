@@ -2,7 +2,12 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        # Default to a China registry mirror to avoid Docker Hub timeouts in China.
+        # Override at build time: `docker compose build --build-arg BASE_IMAGE=python:3.11-slim`
+        BASE_IMAGE: "hub-mirror.c.163.com/library/python:3.11-slim"
     restart: always
     env_file: ./instance/.env
     expose:

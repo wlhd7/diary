@@ -46,6 +46,12 @@ def create_app():
     app.config.setdefault('DB_PORT', 3306)
     app.config.setdefault('DB_NAME', 'diary')
 
+    # Allow setting public endpoints via environment as comma-separated values
+    # e.g. AUTH_PUBLIC_ENDPOINTS=auth.login,auth.register,static
+    auth_public = os.environ.get('AUTH_PUBLIC_ENDPOINTS')
+    if auth_public:
+        app.config['AUTH_PUBLIC_ENDPOINTS'] = [e.strip() for e in auth_public.split(',') if e.strip()]
+
     # Initialize database integrations (register teardown handlers, CLI helpers)
     init_db(app)
 

@@ -1,60 +1,60 @@
 <!-- Copilot / AI Agent instructions for the `diary` repository -->
 # Purpose
-This file gives concise, actionable guidance for AI coding agents working in this repository so they can be productive immediately.
+Concise, actionable guidance for AI coding agents working in this repository so they can be productive immediately.
 
-# Big picture
-- Minimal Flask application using an application factory in `diary/__init__.py` (function `create_app`).
-- The app creates and relies on the `instance/` directory for instance-specific configuration and runtime files.
-- Database initialization is expected to live in `diary/db.py` (`init_db()` exists but is currently a placeholder).
+## Big picture
+- Minimal Flask app using an application factory: see `diary/__init__.py` (`create_app`).
+- Configuration and runtime secrets live under `instance/` (do not commit secrets).
+- Database is MySQL accessed via `PyMySQL`; DB helpers are in `diary/db.py` and the project exposes a `flask init-db` CLI that executes `instance/schema.sql`.
+- Routes are organized as blueprints in `diary/routes/`: `auth.py`, `diary.py`, `home.py`, `tags.py`. Templates live under `templates/` grouped by blueprint.
 
-# Key files to inspect first
-- `diary/__init__.py` — app factory, creates `instance_path` and calls `app.config.from_mapping()`.
-- `diary/db.py` — contains `init_db()`; implement or update the DB connection logic here.
-- `instance/` — instance configuration and runtime files belong here (created by the app at runtime).
+## Key files to inspect first
+- `diary/__init__.py` — application factory, blueprint registration, loads `instance/config.py` if present.
+- `diary/db.py` — `get_db()`, `close_db()`, `init_db(app)`; follow its API when changing DB behavior.
+- `diary/routes/` — blueprint handlers and URL structure (auth, diary, home, tags).
+- `instance/schema.sql` — canonical SQL schema applied by `flask init-db`.
+- `requirements.txt`, `Dockerfile`, `docker-compose.yml`, `deploy/nginx.conf` — runtime & deployment material.
 
-# Project-specific conventions and patterns
-- Use the Flask application factory pattern (`create_app`) — code should avoid importing a global `app`.
-- Store instance-specific secrets/config in `instance/` and access via `app.instance_path` or `app.config`.
-- Keep changes minimal and localized. The repository is intentionally small: prefer small, well-scoped edits rather than broad refactors.
+## How to run & common developer commands
+- Local development (from repo root):
+  - Set the app factory: `export FLASK_APP=diary:create_app`
+  - Optional dev mode: `export FLASK_ENV=development`
+  - Run: `flask run`
+- Initialize the DB (runs SQL in `instance/schema.sql` using app config):
+  - `flask init-db`
+- Docker / container workflows:
+  - Populate `instance/.env` (runtime DB credentials, SECRET_KEY) referenced by `docker-compose.yml`.
+  - Build: `docker compose build`
+  - Start: `docker compose up -d`
+  - Init DB inside container: `docker compose run --rm web flask init-db`
 
-# Developer workflows (commands an agent can run locally)
-- Run the app (development):
-  - `export FLASK_APP=diary:create_app`
-  - `export FLASK_ENV=development` (optional)
-  - `flask run`
-- Alternatively run by Python module: `python -m flask run` after setting `FLASK_APP`.
+## Project-specific conventions & patterns
+- Application factory pattern only — avoid importing a global `app` object. Use `create_app()` to construct app with config.
+- `instance/` is authoritative for per-deployment configuration. Don't commit secrets; prefer `instance/.env` or `instance/config.py` excluded by `.gitignore`.
+- Routes are organized as small blueprints: add new pages by creating a file in `diary/routes/`, registering a Blueprint there, and importing in `diary/__init__.py`.
+- Templates mirror blueprints: add `templates/<blueprint>/...` for view templates (e.g., `templates/diary/index.html`).
 
-# Integration points & external dependencies
-- There are no declared external dependency manifests (no `requirements.txt` or `pyproject.toml`) in the repo. Assume only the standard library and `Flask` are used based on source imports.
+## Data flow & integration points
+- Web requests → blueprint view in `diary/routes/*` → DB helpers in `diary/db.py` → MySQL.
+- `flask init-db` opens a MySQL connection using config in `app.config` and applies `instance/schema.sql` statements.
+- The app relies on environment variables and `instance/config.py` for DB connection strings, secret keys, and other runtime settings.
 
-# Concrete examples and patterns to follow
-- To initialize a local SQLite database, implement `init_db()` in `diary/db.py`. Example (illustrative — adapt to tests or user requirements):
+## Dependencies & noteworthy libraries
+- `Flask` for the web framework.
+- `PyMySQL` for MySQL connections; `cryptography` present to support some MySQL auth plugins.
+- No database migration tool (Alembic) is present — schema changes are applied manually via `instance/schema.sql`.
 
-```py
-import sqlite3
-from flask import current_app, g
-from os import path
+## Editing / PR guidance for AI agents
+- Keep changes minimal and focused: small PRs are preferred.
+- When modifying DB schema, update `instance/schema.sql` and prefer `flask init-db` for applying the schema (document changes in the PR).
+- Do not commit secrets. Use `instance/.env` or instruct the repo owner to add `instance/config.py` locally.
 
-def init_db():
-    db_path = path.join(current_app.instance_path, 'diary.sqlite')
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    g.db = conn
-    return conn
-```
+## Troubleshooting tips
+- If DB connection fails, verify `app.config['DATABASE_*']` values in `instance/config.py` or `.env` and check MySQL accessibility.
+- If a template or blueprint isn't found, confirm the blueprint is registered in `create_app()` in `diary/__init__.py` and names match templates subfolders.
 
-- When changing configuration, prefer adding files under `instance/` (the app creates this path on startup).
+## When to ask the repo owner
+- Before adding new heavy frameworks (ORMs, migrations, or task queues).
+- Before changing the public API or directory layout.
 
-# Editing & PR guidance for AI agents
-- Merge behavior: if `.github/copilot-instructions.md` already exists, preserve existing high-value guidance and append or replace only outdated sections.
-- Keep commits small and focused. Use descriptive commit messages like `impl: implement init_db using sqlite in instance path`.
-
-# What not to assume
-- Do not assume any CI, test runner, or package manager is present — none are discoverable in the repository root.
-- Do not add heavy new frameworks or change project layout without explicit instruction from the user.
-
-# Next steps for an AI agent
-- Start by implementing or improving `diary/db.py` only if the user requested DB features.
-- If you modify runtime behavior, update or create example run commands in this file and ask the user to run the app locally.
-
-If any of these sections are unclear or you'd like additional examples (tests, Dockerfile, dependency manifest), tell me which area to expand. 
+If you'd like, I can add a short `instance/config.py.example`, or wire an Alembic migration setup. Any section you want expanded or clarified?

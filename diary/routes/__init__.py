@@ -3,8 +3,9 @@ from .home import bp as home_bp
 from .auth import bp as auth_bp
 from .diary import bp as diary_bp
 from .tags import bp as tags_bp
+from .search import bp as search_bp
 
-bps = [home_bp, auth_bp, diary_bp, tags_bp]
+bps = [home_bp, auth_bp, diary_bp, tags_bp, search_bp]
 
 def init_routes(app):
     for bp in bps:

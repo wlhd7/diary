@@ -24,3 +24,10 @@ CREATE TABLE IF NOT EXISTS `diary_tags` (
     CONSTRAINT `fk_diary_tags_diary` FOREIGN KEY (`diary_id`) REFERENCES `diary` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_diary_tags_tag` FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Persistent search history and counts
+CREATE TABLE IF NOT EXISTS `search_history` (
+    `term` VARCHAR(255) NOT NULL PRIMARY KEY,
+    `count` BIGINT NOT NULL DEFAULT 0,
+    `last_searched` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -7,3 +7,13 @@ body {
     width: 900px;
     margin: auto;
 }
+
+.nav-link {
+    font-weight: bold;
+}
+
+.nav-link.active {
+    text-decoration: none;
+    color: black;
+    background-color: #00BFFF;
+}

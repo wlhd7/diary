@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Search{% endblock %}
+
+{% block body %}
+	{% with messages = get_flashed_messages(with_categories=true) %}
+		{% if messages %}
+			<ul class="flashes">
+				{% for category, message in messages %}
+					<li class="flash {{ category }}">{{ message }}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+	{% endwith %}
+
+		<form method="post" action="{{ url_for('search.index') }}">
+				<label for="q">Search:</label>
+				<input id="q" name="q" type="search" value="{{ q }}" placeholder="title, content, or tag">
+				<button type="submit">Search</button>
+				<a href="{{ url_for('search.history') }}">History</a>
+		</form>
+
+		{% if not q %}
+				<p>Enter a query to search diary entries by title, content, or tag.</p>
+		{% else %}
+				<h3>Results for "{{ q }}"</h3>
+				{% if results %}
+						<style>
+							.title-row{ display:flex; align-items:center; }
+							.title-text{ white-space:nowrap; }
+							.title-dots{ flex:1; border-bottom:1px dotted #888; margin:0 0.5rem; height:0.6em; }
+							.title-tags{ white-space:nowrap; font-size:0.95rem; }
+							.title-tags a{ text-decoration:none; color:inherit; }
+							.titles-list{ list-style:none; padding:0; margin:0; }
+							.titles-list li{ padding:0.4rem 0; }
+						</style>
+
+						<ul class="titles-list">
+							{% for e in results %}
+								<li>
+									<div class="title-row">
+										<div class="title-text"><a href="{{ url_for('diary.detail', id=e.id) }}">{{ e.title }}</a></div>
+										{% if e.tags %}
+											<div class="title-dots" aria-hidden="true"></div>
+											<div class="title-tags">
+												{% for t in e.tags.split(',') %}
+													<a href="{{ url_for('home.preview') }}?tag={{ t|urlencode }}">{{ t }}</a>{% if not loop.last %}, {% endif %}
+												{% endfor %}
+											</div>
+										{% endif %}
+									</div>
+								</li>
+							{% endfor %}
+						</ul>
+				{% else %}
+						<p>No entries found.</p>
+				{% endif %}
+		{% endif %}
+
+{% endblock %}

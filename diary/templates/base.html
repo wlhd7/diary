@@ -9,10 +9,11 @@
 
 <body>
     <nav>
-      <a href="{{ url_for('home.preview') }}">Preview</a>
-      <a href="{{ url_for('home.title') }}">Title</a>
-      <a href="{{ url_for('diary.new') }}">New</a>
-      <a href="{{ url_for('tags.index') }}">Tags</a>
+      <a class="nav-link{% if request.endpoint== 'home.preview' %} active{% endif %}" href="{{ url_for('home.preview') }}">Preview</a>
+      <a class="nav-link{% if request.endpoint == 'home.title' %} active{% endif %}" href="{{ url_for('home.title') }}">Title</a>
+      <a class="nav-link{% if request.blueprint == 'diary' %} active{% endif %}" href="{{ url_for('diary.new') }}">New</a>
+      <a class="nav-link{% if request.blueprint == 'tags' %} active{% endif %}" href="{{ url_for('tags.index') }}">Tags</a>
+      <a class="nav-link{% if request.blueprint == 'search' %} active{% endif %}" href="{{ url_for('search.index') }}">Search</a>
     </nav>
     {% block body %}{% endblock %}
 

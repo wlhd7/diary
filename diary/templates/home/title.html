@@ -44,6 +44,29 @@
         </li>
       {% endfor %}
     </ul>
+      {% if total_pages and total_pages > 1 %}
+        <nav aria-label="Pagination" style="margin-top:1rem">
+          <div>
+            {% set qargs = {} %}
+            {% if selected_tag %}
+              {% set qargs = qargs.update({'tag': selected_tag}) %}
+            {% endif %}
+          </div>
+          <div>
+            {% if page > 1 %}
+              <a href="{{ url_for('home.title', tag=selected_tag, page=page-1) }}">&laquo; Prev</a>
+            {% else %}
+              <span style="color:#999">&laquo; Prev</span>
+            {% endif %}
+            <span style="margin:0 0.75rem">Page {{ page }} of {{ total_pages }}</span>
+            {% if page < total_pages %}
+              <a href="{{ url_for('home.title', tag=selected_tag, page=page+1) }}">Next &raquo;</a>
+            {% else %}
+              <span style="color:#999">Next &raquo;</span>
+            {% endif %}
+          </div>
+        </nav>
+      {% endif %}
   {% else %}
     <p>No entries yet.</p>
   {% endif %}

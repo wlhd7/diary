@@ -1,9 +1,5 @@
 {% extends "base.html" %}
 
-{% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/preview.css') }}">
-{% endblock %}
-
 {% block title %}Preview{% endblock %}
 {% block body %}
 	{% if tag %}
@@ -11,21 +7,51 @@
 	{% endif %}
 
 	{% if entries %}
-		<ul>
+		<style>
+			.title-row{ display:flex; align-items:center; }
+			.title-text{ white-space:nowrap; }
+			.title-dots{ flex:1; border-bottom:1px dotted #888; margin:0 0.5rem; height:0.6em; }
+			.title-tags{ white-space:nowrap; font-size:0.95rem; }
+			.title-tags a{ text-decoration:none; color:inherit; }
+			.titles-list{ list-style:none; padding:0; margin:0; }
+			.titles-list li{ padding:0.4rem 0; }
+			.entry-body{ margin-top:0.25rem }
+		</style>
+
+		<ul class="titles-list">
 		{% for e in entries %}
 			<li>
-				<p class="title">{{ e.title }}</p>
+				<div class="title-row">
+					<div class="title-text"><a href="{{ url_for('diary.detail', id=e.id) }}">{{ e.title }}</a></div>
+					{% if e.tags %}
+						<div class="title-dots" aria-hidden="true"></div>
+						<div class="title-tags">
+							{% for t in e.tags.split(',') %}
+								<a href="{{ url_for('home.preview') }}?tag={{ t|urlencode }}">{{ t }}</a>{% if not loop.last %}, {% endif %}
+							{% endfor %}
+						</div>
+					{% endif %}
+				</div>
 				<div class="entry-body" style="white-space: pre-wrap;">{{ e.content|e }}</div>
-				{% if e.tags %}
-					<p class="tags">Tags:
-					{% for t in e.tags.split(',') %}
-						<a href="{{ url_for('home.preview') }}?tag={{ t|urlencode }}">{{ t }}</a>{% if not loop.last %}, {% endif %}
-					{% endfor %}
-					</p>
-				{% endif %}
 			</li>
 		{% endfor %}
 		</ul>
+
+		{% if total_pages and total_pages > 1 %}
+			<nav aria-label="Pagination" style="margin-top:1rem">
+				{% if page > 1 %}
+					<a href="{{ url_for('home.preview', tag=tag, page=page-1) }}">&laquo; Prev</a>
+				{% else %}
+					<span style="color:#999">&laquo; Prev</span>
+				{% endif %}
+				<span style="margin:0 0.75rem">Page {{ page }} of {{ total_pages }}</span>
+				{% if page < total_pages %}
+					<a href="{{ url_for('home.preview', tag=tag, page=page+1) }}">Next &raquo;</a>
+				{% else %}
+					<span style="color:#999">Next &raquo;</span>
+				{% endif %}
+			</nav>
+		{% endif %}
 	{% else %}
 		<p>No entries yet.</p>
 	{% endif %}

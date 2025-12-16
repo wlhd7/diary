@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Search History{% endblock %}
+
+{% block body %}
+	<h3>Search History</h3>
+
+	{% if history %}
+		<ul>
+			{% for item in history %}
+				<li>
+					<a href="{{ url_for('search.index') }}?q={{ item.term|urlencode }}">{{ item.term }}</a>
+					— <small>{{ item.count }} time{% if item.count != 1 %}s{% endif %}</small>
+					<span style="color:#666; margin-left:0.5rem">({{ item.last_searched }})</span>
+					<form method="post" action="{{ url_for('search.delete_history_term') }}" style="display:inline; margin-left:0.5rem">
+						<input type="hidden" name="term" value="{{ item.term }}">
+						<button type="submit">Delete</button>
+					</form>
+				</li>
+			{% endfor %}
+		</ul>
+	{% else %}
+		<p>No search history yet.</p>
+	{% endif %}
+
+{% endblock %}

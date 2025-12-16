@@ -20,6 +20,28 @@
         <label for="content">Content</label>
       <textarea id="content" name="content" rows="8">{{ entry.content|e }}</textarea>
         <br>
+      <label for="tags">Tags</label>
+      {% if tags %}
+      <select id="tags" name="tags" multiple style="display:none">
+        {% for t in tags %}
+          <option value="{{ t.id }}" {% if existing_tag_ids and t.id in existing_tag_ids %}selected{% endif %}>{{ t.name }}</option>
+        {% endfor %}
+      </select>
+
+      <div id="tags-multicol" class="tags-multicol" aria-hidden="false">
+        {% for t in tags %}
+        <label><input type="checkbox" class="tag-checkbox" data-tag-id="{{ t.id }}" {% if existing_tag_ids and t.id in existing_tag_ids %}checked{% endif %}> {{ t.name }}</label>
+        {% endfor %}
+      </div>
+      <div style="margin-top:0.5rem">
+        <input id="new-tag-name" placeholder="New tag name">
+        <button type="button" id="create-tag-btn">Add tag</button>
+        <span id="create-tag-error" style="color:#a00; margin-left:0.5rem"></span>
+      </div>
+      {% else %}
+        <p>No tags yet. <a href="{{ url_for('tags.new') }}">Create one</a></p>
+      {% endif %}
+      <br>
         <button type="submit">Save</button>
     </form>
 
@@ -65,5 +87,96 @@
       // also adjust on window resize in case layout changes
       window.addEventListener('resize', adjustWidth);
     })();
+  </script>
+  <script>
+  (function(){
+  const form = document.querySelector('form');
+  if (!form) return;
+    const select = document.getElementById('tags');
+    const checkboxes = Array.from(document.querySelectorAll('.tag-checkbox'));
+
+    function syncToSelect(){
+      if (!select) return;
+      Array.from(select.options).forEach(opt => opt.selected = false);
+      checkboxes.forEach(cb => {
+        if (cb.checked){
+          const id = cb.getAttribute('data-tag-id');
+          const opt = select.querySelector('option[value="' + id + '"]');
+          if (opt) opt.selected = true;
+        }
+      });
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', syncToSelect));
+    form.addEventListener('submit', function(){ syncToSelect(); });
+  })();
+  </script>
+  <script>
+  (function(){
+    const createBtn = document.getElementById('create-tag-btn');
+    const nameInput = document.getElementById('new-tag-name');
+    const select = document.getElementById('tags');
+    const multicol = document.getElementById('tags-multicol');
+    const errorSpan = document.getElementById('create-tag-error');
+
+    if (!createBtn || !nameInput) return;
+
+    createBtn.addEventListener('click', async function(){
+      const name = nameInput.value.trim();
+      errorSpan.textContent = '';
+      if (!name) {
+        errorSpan.textContent = 'Name required';
+        return;
+      }
+
+      try {
+        const resp = await fetch("{{ url_for('tags.create') }}", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+
+        if (resp.status === 201) {
+          const data = await resp.json();
+          // Add option to hidden select
+          if (select) {
+            const opt = document.createElement('option');
+            opt.value = data.id;
+            opt.text = data.name;
+            opt.selected = true;
+            select.appendChild(opt);
+          }
+
+          // Add checkbox to multicol
+          if (multicol) {
+            const label = document.createElement('label');
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'tag-checkbox';
+            cb.setAttribute('data-tag-id', data.id);
+            cb.checked = true;
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(' ' + data.name));
+            multicol.appendChild(label);
+            // wire change handler to keep select in sync
+            cb.addEventListener('change', function(){
+              // unselect previously added option if unchecked
+              const opt = select.querySelector('option[value="' + data.id + '"]');
+              if (opt) opt.selected = cb.checked;
+            });
+          }
+
+          nameInput.value = '';
+        } else if (resp.status === 409) {
+          errorSpan.textContent = 'Tag already exists';
+        } else {
+          const body = await resp.json().catch(()=>({}));
+          errorSpan.textContent = body.error || 'Could not create tag';
+        }
+      } catch (err) {
+        errorSpan.textContent = 'Network error';
+      }
+    });
+  })();
   </script>
 {% endblock %}

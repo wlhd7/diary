@@ -82,10 +82,18 @@ def edit(id):
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         content = request.form.get('content', '').strip()
+        # Collect tag ids submitted from the form (multiple-select)
+        selected_tags = request.form.getlist('tags')
 
         if not title:
             flash('Title is required.', 'error')
-            return render_template('diary/edit.html', entry=entry)
+            # Re-fetch tags for rendering
+            with conn.cursor() as cur:
+                cur.execute('SELECT id, name FROM tags ORDER BY name')
+                tags = cur.fetchall()
+                cur.execute('SELECT tag_id FROM diary_tags WHERE diary_id = %s', (id,))
+                existing = [r['tag_id'] for r in cur.fetchall()]
+            return render_template('diary/edit.html', entry=entry, tags=tags, existing_tag_ids=existing)
 
         with conn.cursor() as cur:
             cur.execute(
@@ -93,10 +101,30 @@ def edit(id):
                 (title, content, id),
             )
 
+            # Update tag associations: remove existing and insert selected
+            cur.execute('DELETE FROM diary_tags WHERE diary_id = %s', (id,))
+            if selected_tags:
+                for tid in selected_tags:
+                    try:
+                        tag_id = int(tid)
+                    except (TypeError, ValueError):
+                        continue
+                    cur.execute(
+                        "INSERT INTO diary_tags (diary_id, tag_id) VALUES (%s, %s)",
+                        (id, tag_id),
+                    )
+
         flash('Entry updated.', 'success')
         return redirect(url_for('home.preview'))
 
-    return render_template('diary/edit.html', entry=entry)
+    # Load tags and existing tag ids for the form
+    with conn.cursor() as cur:
+        cur.execute('SELECT id, name FROM tags ORDER BY name')
+        tags = cur.fetchall()
+        cur.execute('SELECT tag_id FROM diary_tags WHERE diary_id = %s', (id,))
+        existing = [r['tag_id'] for r in cur.fetchall()]
+
+    return render_template('diary/edit.html', entry=entry, tags=tags, existing_tag_ids=existing)
 
 
 @bp.route('/<int:id>')

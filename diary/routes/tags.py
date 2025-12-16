@@ -2,7 +2,7 @@
 
 
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify
 from diary.db import get_db
 import pymysql
 
@@ -84,3 +84,33 @@ def delete(id):
 
     flash('Tag deleted.')
     return redirect(url_for('tags.index'))
+
+
+@bp.route('/create', methods=['POST'])
+def create():
+    """Create a tag via AJAX/JSON. Accepts form or JSON `name` and returns JSON.
+
+    Returns 201 with JSON {id, name} on success, 400 for bad input, 409 for duplicate.
+    """
+    data = request.get_json(silent=True)
+    name = None
+    if data and 'name' in data:
+        name = data.get('name', '').strip()
+    else:
+        # fallback to form-encoded
+        name = request.form.get('name', '').strip()
+
+    if not name:
+        return jsonify({'error': 'Tag name is required.'}), 400
+
+    conn = get_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute('INSERT INTO tags (name) VALUES (%s)', (name,))
+            tag_id = cur.lastrowid
+    except pymysql.err.IntegrityError:
+        return jsonify({'error': 'Tag already exists.'}), 409
+    except Exception:
+        return jsonify({'error': 'Could not create tag.'}), 500
+
+    return jsonify({'id': tag_id, 'name': name}), 201

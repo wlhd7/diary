@@ -8,12 +8,13 @@ body {
     margin: auto;
 }
 
-.nav-link {
-    font-weight: bold;
-}
-
 .nav-link.active {
     text-decoration: none;
     color: black;
     background-color: #00BFFF;
+}
+
+a {
+    font-style: italic;
+    font-weight: bold;
 }

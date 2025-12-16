@@ -28,35 +28,46 @@ def index():
         history.insert(0, q)
         session['search_history'] = history[:20]
 
-        # Query DB for matching entries (title, content, tag name)
-        like = f"%{q}%"
+        # Support multiple keywords separated by whitespace; require all keywords (AND)
+        keywords = [k for k in q.split() if k]
         conn = get_db()
         with conn.cursor() as cur:
-            cur.execute(
-                """
+            if keywords:
+                where_clauses = []
+                params = []
+                for kw in keywords:
+                    like = f"%{kw}%"
+                    where_clauses.append("(d.title LIKE %s OR d.content LIKE %s OR t.name LIKE %s)")
+                    params.extend([like, like, like])
+
+                where_sql = " AND ".join(where_clauses)
+                sql = f"""
                 SELECT d.id, d.title, d.content, d.created_at,
                   GROUP_CONCAT(t.name SEPARATOR ',') AS tags
                 FROM diary d
                 LEFT JOIN diary_tags dt ON d.id = dt.diary_id
                 LEFT JOIN tags t ON dt.tag_id = t.id
-                WHERE d.title LIKE %s OR d.content LIKE %s OR t.name LIKE %s
+                WHERE {where_sql}
                 GROUP BY d.id
                 ORDER BY d.created_at DESC
-                """,
-                (like, like, like),
-            )
-            results = cur.fetchall()
-        # Persist the search term and increment its count in `search_history`.
-        try:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "INSERT INTO search_history (term, count, last_searched) VALUES (%s, 1, CURRENT_TIMESTAMP) "
-                    "ON DUPLICATE KEY UPDATE count = count + 1, last_searched = CURRENT_TIMESTAMP",
-                    (q,)
-                )
-        except Exception:
-            # Non-fatal: ignore DB errors so search still works
-            pass
+                """
+                cur.execute(sql, tuple(params))
+                results = cur.fetchall()
+            else:
+                results = []
+        # Persist the search term and increment its count in `search_history`
+        # only when the search actually returned results.
+        if results:
+            try:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "INSERT INTO search_history (term, count, last_searched) VALUES (%s, 1, CURRENT_TIMESTAMP) "
+                        "ON DUPLICATE KEY UPDATE count = count + 1, last_searched = CURRENT_TIMESTAMP",
+                        (q,)
+                    )
+            except Exception:
+                # Non-fatal: ignore DB errors so search still works
+                pass
 
     return render_template('search/index.html', q=q, results=results)
 
@@ -88,7 +99,3 @@ def delete_history_term():
 
     flash(f'Removed search "{term}".', 'success')
     return redirect(url_for('search.history'))
-
-@bp.route('/history/delete', methods=['POST'])
-def delete_history():
-    pass

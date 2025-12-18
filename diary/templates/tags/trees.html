@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Tags{% endblock %}
+
+{% block body %}
+{% if tag_tree %}
+  <style>
+    .tag-tree { list-style: none; padding-left: 0; }
+    .tag-tree ul { list-style: none; margin: 0.25rem 0 0.25rem 1.25rem; padding-left: 0; }
+    .tag-row { display:flex; align-items:center; }
+    .tag-name { font-weight: 600; white-space:nowrap; }
+    .tag-dots { flex:1; border-bottom:1px dotted #888; margin:0 0.5rem; height:0.6em }
+    .tag-meta { font-size: 0.95rem; padding-right: 2px; white-space:nowrap }
+    .tag-right { white-space:nowrap; display:inline-flex; align-items:center }
+    .tag-tree li { margin: 0.25rem 0; }
+  </style>
+
+  {% macro render_node(n) %}
+    <li>
+      <div class="tag-row">
+        <span class="tag-name"><a href="{{ url_for('home.preview') }}?tag={{ n.name|urlencode }}">{{ n.name }}</a></span>
+        <span class="tag-dots" aria-hidden="true"></span>
+        <span class="tag-right">
+          <span class="tag-meta">{{ n.usage_count }}</span>
+          <a href="{{ url_for('tags.edit', id=n.id) }}" style="margin-left:0.5rem">Edit</a>
+          <form method="post" action="{{ url_for('tags.delete', id=n.id) }}" style="display:inline; margin-left:0.25rem" onsubmit="return confirm('Delete this tag?');">
+            <button type="submit">Delete</button>
+          </form>
+        </span>
+      </div>
+      {% if n.children %}
+        <ul>
+          {% for c in n.children %}
+            {{ render_node(c) }}
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </li>
+  {% endmacro %}
+
+  <ul class="tag-tree">
+    {% for root in tag_tree %}
+      {{ render_node(root) }}
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No tags yet.</p>
+{% endif %}
+
+{% endblock %}

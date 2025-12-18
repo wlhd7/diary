@@ -3,30 +3,47 @@
 {% block title %}Tags{% endblock %}
 
 {% block body %}
-<p><a href="{{ url_for('tags.new') }}">Create new tag</a></p>
+<a href="{{ url_for('tags.new') }}">New</a>
+<a href="{{ url_for('tags.trees') }}">Trees</a>
 
-{% if tags %}
-<table>
-  <thead>
-    <tr><th>Name</th><th>Usage</th><th>Actions</th></tr>
-  </thead>
-  <tbody>
-  {% for t in tags %}
-    <tr>
-      <td><a href="{{ url_for('home.preview') }}?tag={{ t.name|urlencode }}">{{ t.name }}</a></td>
-      <td>{{ t.usage_count }}</td>
-      <td>
-        <a href="{{ url_for('tags.edit', id=t.id) }}">Edit</a>
-        <form method="post" action="{{ url_for('tags.delete', id=t.id) }}" style="display:inline" onsubmit="return confirm('Delete this tag?');">
-          <button type="submit">Delete</button>
-        </form>
-      </td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
+{% if tag_groups is defined %}
+	<style>
+		.tier-heading { margin-top: 1rem; }
+		.tier-list { list-style:none; padding-left:0; }
+		.tag-item { margin: 0.25rem 0; }
+		.tag-row { display:flex; align-items:center; }
+		.tag-left { flex:1; text-align:left; }
+		.tag-right { flex:1; display:flex; text-align: right;}
+		.tag-dots { width:100%; border-bottom:1px dotted #888; margin:0 0.5rem; height:0.6em }
+		ul { margin:0}
+	</style>
+
+	{% for tier in range(0, max_tier + 1) %}
+		<div class="tier-section">
+			<div class="tier-heading">Tier: {{ tier }}</div>
+			<ul class="tier-list">
+				{% for t in tag_groups.get(tier, []) %}
+					<li class="tag-item">
+						<div class="tag-row">
+							<div class="tag-left"><a href="{{ url_for('home.preview') }}?tag={{ t.name|urlencode }}">{{ t.name }}</a></div>
+							<div class="tag-dots" aria-hidden="true"></div>
+							<div class="tag-right">
+								<span style="padding-right:10px">{{ t.usage_count }}</span>
+								<a href="{{ url_for('tags.edit', id=t.id) }}"> Edit</a>
+								<form method="post" action="{{ url_for('tags.delete', id=t.id) }}" style="display:inline; margin-left:0.5rem" onsubmit="return confirm('Delete this tag?');">
+									<button type="submit">Delete</button>
+								</form>
+							</div>
+						</div>
+					</li>
+				{% else %}
+					<li class="tag-item"><em>No tags at this tier.</em></li>
+				{% endfor %}
+			</ul>
+		</div>
+	{% endfor %}
 {% else %}
-<p>No tags yet.</p>
+	<p>No tags yet.</p>
 {% endif %}
 
 {% endblock %}

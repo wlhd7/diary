@@ -3,11 +3,71 @@
 {% block title %}New Tag{% endblock %}
 
 {% block body %}
-<h1>Create Tag</h1>
 <form method="post">
   <label for="name">Name</label>
   <input id="name" name="name" required>
+  <br>
+  <label for="parent_id">Parent tag (optional)</label>
+  <select id="parent_id" name="parent_id">
+    <option value="">— none —</option>
+    {% for t in tags %}
+      <option value="{{ t.id }}">{{ t.name }}</option>
+    {% endfor %}
+  </select>
   <button type="submit">Create</button>
 </form>
-<p><a href="{{ url_for('tags.index') }}">Back to tags</a></p>
+<div id="create-tag-message" style="color:#060; margin-top:0.5rem"></div>
+
+<script>
+(function(){
+  const form = document.querySelector('form');
+  if (!form) return;
+  const nameInput = document.getElementById('name');
+  const msg = document.getElementById('create-tag-message');
+
+  // Focus on load
+  if (nameInput) nameInput.focus();
+
+  form.addEventListener('submit', async function(e){
+    // Use AJAX to create so the page stays and the input can be focused again.
+    e.preventDefault();
+    if (!nameInput) return form.submit();
+    const name = nameInput.value.trim();
+    if (!name) {
+      msg.style.color = '#a00';
+      msg.textContent = 'Name required';
+      nameInput.focus();
+      return;
+    }
+
+    try {
+      const resp = await fetch("{{ url_for('tags.create') }}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name })
+      });
+
+      if (resp.status === 201) {
+        const data = await resp.json().catch(() => ({}));
+        msg.style.color = '#060';
+        msg.textContent = (data.name ? ('Created: ' + data.name) : 'Tag created.');
+        nameInput.value = '';
+        nameInput.focus();
+      } else if (resp.status === 409) {
+        msg.style.color = '#a00';
+        msg.textContent = 'Tag already exists';
+        nameInput.focus();
+      } else {
+        const body = await resp.json().catch(() => ({}));
+        msg.style.color = '#a00';
+        msg.textContent = body.error || 'Could not create tag';
+        nameInput.focus();
+      }
+    } catch (err) {
+      // On network error, fall back to normal submit (which redirects)
+      form.submit();
+    }
+  });
+})();
+</script>
 {% endblock %}

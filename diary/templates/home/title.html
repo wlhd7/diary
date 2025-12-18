@@ -19,7 +19,7 @@
       <select id="tag-filter" name="tag" onchange="this.form.submit()">
         <option value="">All tags</option>
         {% for t in tags %}
-          <option value="{{ t.name }}" {% if selected_tag==t.name %}selected{% endif %}>{{ t.name }}</option>
+          <option value="{{ t.name }}" {% if selected_tag == t.name %}selected{% endif %}>{{ t.name }}</option>
         {% endfor %}
       </select>
       <noscript><button type="submit">Filter</button></noscript>

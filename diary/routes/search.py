@@ -43,9 +43,9 @@ def index():
                 where_sql = " AND ".join(where_clauses)
                 sql = f"""
                 SELECT d.id, d.title, d.content, d.created_at,
-                  GROUP_CONCAT(t.name SEPARATOR ',') AS tags
+                    GROUP_CONCAT(t.name SEPARATOR ',') AS tags
                 FROM diary d
-                LEFT JOIN diary_tags dt ON d.id = dt.diary_id
+                LEFT JOIN diary_tags_closure dt ON d.id = dt.diary_id
                 LEFT JOIN tags t ON dt.tag_id = t.id
                 WHERE {where_sql}
                 GROUP BY d.id
@@ -73,12 +73,30 @@ def index():
 
 @bp.route('/history')
 def history():
+    # Support optional filtering and ordering via query params:
+    # - filter: substring match on `term`
+    # - order: 'usage' (count desc) or 'time' (last_searched desc)
+    filter_term = request.args.get('filter', '').strip()
+    order = request.args.get('order', 'usage')
+
     conn = get_db()
+    params = []
+    where_sql = ''
+    if filter_term:
+        where_sql = 'WHERE term LIKE %s'
+        params.append(f"%{filter_term}%")
+
+    if order == 'time':
+        order_sql = 'ORDER BY last_searched DESC, count DESC'
+    else:
+        order_sql = 'ORDER BY count DESC, last_searched DESC'
+
     with conn.cursor() as cur:
-        cur.execute("SELECT term, count, last_searched FROM search_history ORDER BY last_searched DESC")
+        sql = f"SELECT term, count, last_searched FROM search_history {where_sql} {order_sql}"
+        cur.execute(sql, tuple(params))
         rows = cur.fetchall()
 
-    return render_template('search/history.html', history=rows)
+    return render_template('search/history.html', history=rows, filter=filter_term, order=order)
 
 
 @bp.route('/history/delete', methods=['POST'])

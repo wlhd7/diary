@@ -2,16 +2,6 @@
 
 {% block title %}New{% endblock %}
 {% block body %}
-		{% with messages = get_flashed_messages(with_categories=true) %}
-			{% if messages %}
-				<ul class="flashes">
-					{% for category, message in messages %}
-						<li class="flash {{ category }}">{{ message }}</li>
-					{% endfor %}
-				</ul>
-			{% endif %}
-		{% endwith %}
-
 		<form method="post" action="{{ url_for('diary.new') }}">
 				<label for="title">Title</label>
 				<input id="title" name="title" value="{{ title|default('') }}" style="width:100%" required>
@@ -56,24 +46,26 @@
 		(function(){
 		const form = document.querySelector('form');
 		if (!form) return;
-		  const select = document.getElementById('tags');
-		  const checkboxes = Array.from(document.querySelectorAll('.tag-checkbox'));
+					const select = document.getElementById('tags');
 
-		  function syncToSelect(){
-		    if (!select) return;
-		    Array.from(select.options).forEach(opt => opt.selected = false);
-		    checkboxes.forEach(cb => {
-		      if (cb.checked){
-		        const id = cb.getAttribute('data-tag-id');
-		        const opt = select.querySelector('option[value="' + id + '"]');
-		        if (opt) opt.selected = true;
-		      }
-		    });
-		  }
+					function syncToSelect(){
+						if (!select) return;
+						Array.from(select.options).forEach(opt => opt.selected = false);
+						// Query checkboxes at time of submit so newly added checkboxes are included
+						const boxes = Array.from(document.querySelectorAll('.tag-checkbox'));
+						boxes.forEach(cb => {
+							if (cb.checked){
+								const id = cb.getAttribute('data-tag-id');
+								const opt = select.querySelector('option[value="' + id + '"]');
+								if (opt) opt.selected = true;
+							}
+						});
+					}
 
-		  // Optional: clicking a label toggles checkbox already handled by default
-		  checkboxes.forEach(cb => cb.addEventListener('change', syncToSelect));
-		  form.addEventListener('submit', function(){ syncToSelect(); });
+					// Wire existing checkboxes; newly-created checkboxes are wired when created
+					const checkboxes = Array.from(document.querySelectorAll('.tag-checkbox'));
+					checkboxes.forEach(cb => cb.addEventListener('change', syncToSelect));
+					form.addEventListener('submit', function(){ syncToSelect(); });
 		})();
 		</script>
 

@@ -3,21 +3,13 @@
 {% block title %}Search{% endblock %}
 
 {% block body %}
-	{% with messages = get_flashed_messages(with_categories=true) %}
-		{% if messages %}
-			<ul class="flashes">
-				{% for category, message in messages %}
-					<li class="flash {{ category }}">{{ message }}</li>
-				{% endfor %}
-			</ul>
-		{% endif %}
-	{% endwith %}
+		<a href="{{ url_for('search.history') }}">History</a>
 
 		<form method="post" action="{{ url_for('search.index') }}">
 				<label for="q">Search:</label>
 				<input id="q" name="q" type="search" value="{{ q }}" placeholder="title, content, or tag">
 				<button type="submit">Search</button>
-				<a href="{{ url_for('search.history') }}">History</a>
+
 		</form>
 
 		{% if not q %}

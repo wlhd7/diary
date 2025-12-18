@@ -3,22 +3,44 @@
 {% block title %}Search History{% endblock %}
 
 {% block body %}
-	<h3>Search History</h3>
-
 	{% if history %}
-		<ul>
-			{% for item in history %}
-				<li>
-					<a href="{{ url_for('search.index') }}?q={{ item.term|urlencode }}">{{ item.term }}</a>
-					— <small>{{ item.count }} time{% if item.count != 1 %}s{% endif %}</small>
-					<span style="color:#666; margin-left:0.5rem">({{ item.last_searched }})</span>
+		<style>
+			.row { display:flex; align-items:center; margin-top:0.5rem; }
+			.row a { white-space:nowrap; }
+			.row-dots { flex:1; border-bottom:1px dotted #888; margin:0 0.5rem; height:0.6em }
+			.row-right { white-space:nowrap; display:inline-flex; align-items:center }
+			.row-right .time { padding-left:0.75rem; color:#666 }
+			.history-controls { margin-bottom:0.75rem; display:flex; gap:0.5rem; align-items:center }
+			.history-controls form { display:flex; gap:0.5rem; align-items:center }
+			.history-controls input[type="text"] { margin-right:2px }
+		</style>
+
+		<div class="history-controls">
+			<form method="get" action="{{ url_for('search.history') }}">
+				<label for="filter">Filter:</label>
+				<input id="filter" name="filter" type="text" value="{{ filter or '' }}" placeholder="substring">
+				<label for="order">Order:</label>
+				<select id="order" name="order" onchange="this.form.submit()">
+					<option value="usage" {% if order != 'time' %}selected{% endif %}>Usage ↓</option>
+					<option value="time" {% if order == 'time' %}selected{% endif %}>Time ↓</option>
+				</select>
+				<noscript><button type="submit">Apply</button></noscript>
+			</form>
+		</div>
+		{% for item in history %}
+			<div class="row">
+				<a href="{{ url_for('search.index') }}?q={{ item.term|urlencode }}">{{ item.term }}</a>
+				<div class="row-dots" aria-hidden="true"></div>
+				<div class="row-right">
+					<div>{{ item.count }}</div>
+					<span class="time">{{ item.last_searched }}</span>
 					<form method="post" action="{{ url_for('search.delete_history_term') }}" style="display:inline; margin-left:0.5rem">
 						<input type="hidden" name="term" value="{{ item.term }}">
 						<button type="submit">Delete</button>
 					</form>
-				</li>
-			{% endfor %}
-		</ul>
+				</div>
+			</div>
+		{% endfor %}
 	{% else %}
 		<p>No search history yet.</p>
 	{% endif %}

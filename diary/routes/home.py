@@ -29,8 +29,8 @@ def preview():
                 """
                 SELECT COUNT(DISTINCT d.id) AS cnt
                 FROM diary d
-                JOIN diary_tags dt2 ON dt2.diary_id = d.id
-                JOIN tags t2 ON t2.id = dt2.tag_id
+                JOIN diary_tags_closure dtc ON dtc.diary_id = d.id
+                JOIN tags t2 ON t2.id = dtc.tag_id
                 WHERE t2.name = %s
                 """,
                 (tag,)
@@ -45,11 +45,11 @@ def preview():
                 FROM diary d
                 LEFT JOIN diary_tags dt ON dt.diary_id = d.id
                 LEFT JOIN tags t ON t.id = dt.tag_id
-                WHERE EXISTS (
-                  SELECT 1 FROM diary_tags dt2
-                  JOIN tags t2 ON t2.id = dt2.tag_id
-                  WHERE dt2.diary_id = d.id AND t2.name = %s
-                )
+                                WHERE EXISTS (
+                                    SELECT 1 FROM diary_tags_closure dt2
+                                    JOIN tags t2 ON t2.id = dt2.tag_id
+                                    WHERE dt2.diary_id = d.id AND t2.name = %s
+                                )
                 GROUP BY d.id
                 ORDER BY d.created_at DESC
                 LIMIT %s OFFSET %s
@@ -102,11 +102,11 @@ def title():
                 """
                 SELECT COUNT(*) AS cnt
                 FROM diary d
-                WHERE EXISTS (
-                  SELECT 1 FROM diary_tags dt2
-                  JOIN tags t2 ON t2.id = dt2.tag_id
-                  WHERE dt2.diary_id = d.id AND t2.name = %s
-                )
+                                WHERE EXISTS (
+                                    SELECT 1 FROM diary_tags_closure dt2
+                                    JOIN tags t2 ON t2.id = dt2.tag_id
+                                    WHERE dt2.diary_id = d.id AND t2.name = %s
+                                )
                 """,
                 (selected_tag,)
             )
@@ -120,11 +120,11 @@ def title():
                 FROM diary d
                 LEFT JOIN diary_tags dt ON dt.diary_id = d.id
                 LEFT JOIN tags t ON t.id = dt.tag_id
-                WHERE EXISTS (
-                  SELECT 1 FROM diary_tags dt2
-                  JOIN tags t2 ON t2.id = dt2.tag_id
-                  WHERE dt2.diary_id = d.id AND t2.name = %s
-                )
+                                WHERE EXISTS (
+                                    SELECT 1 FROM diary_tags_closure dt2
+                                    JOIN tags t2 ON t2.id = dt2.tag_id
+                                    WHERE dt2.diary_id = d.id AND t2.name = %s
+                                )
                 GROUP BY d.id
                 ORDER BY d.created_at DESC
                 LIMIT %s OFFSET %s

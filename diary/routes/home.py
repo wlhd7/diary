@@ -29,8 +29,8 @@ def preview():
                 """
                 SELECT COUNT(DISTINCT d.id) AS cnt
                 FROM diary d
-                JOIN diary_tags_closure dtc ON dtc.diary_id = d.id
-                JOIN tags t2 ON t2.id = dtc.tag_id
+                JOIN diary_tags dt2 ON dt2.diary_id = d.id
+                JOIN tags t2 ON t2.id = dt2.tag_id
                 WHERE t2.name = %s
                 """,
                 (tag,)
@@ -45,11 +45,11 @@ def preview():
                 FROM diary d
                 LEFT JOIN diary_tags dt ON dt.diary_id = d.id
                 LEFT JOIN tags t ON t.id = dt.tag_id
-                                WHERE EXISTS (
-                                    SELECT 1 FROM diary_tags_closure dt2
-                                    JOIN tags t2 ON t2.id = dt2.tag_id
-                                    WHERE dt2.diary_id = d.id AND t2.name = %s
-                                )
+                WHERE EXISTS (
+                  SELECT 1 FROM diary_tags dt2
+                  JOIN tags t2 ON t2.id = dt2.tag_id
+                  WHERE dt2.diary_id = d.id AND t2.name = %s
+                )
                 GROUP BY d.id
                 ORDER BY d.created_at DESC
                 LIMIT %s OFFSET %s
@@ -97,40 +97,67 @@ def title():
     conn = get_db()
     with conn.cursor() as cur:
         if selected_tag:
-            # Count matching entries for pagination
-            cur.execute(
-                """
-                SELECT COUNT(*) AS cnt
-                FROM diary d
-                                WHERE EXISTS (
-                                    SELECT 1 FROM diary_tags_closure dt2
-                                    JOIN tags t2 ON t2.id = dt2.tag_id
-                                    WHERE dt2.diary_id = d.id AND t2.name = %s
-                                )
-                """,
-                (selected_tag,)
-            )
-            total = cur.fetchone()['cnt']
+            # Count matching entries for pagination using direct diary_tags join
+            if selected_tag.isdigit():
+                cur.execute(
+                    """
+                    SELECT COUNT(DISTINCT d.id) AS cnt
+                    FROM diary d
+                    JOIN diary_tags dt2 ON dt2.diary_id = d.id
+                    JOIN tags t2 ON t2.id = dt2.tag_id
+                    WHERE t2.id = %s
+                    """,
+                    (int(selected_tag),)
+                )
+                total = cur.fetchone()['cnt']
 
-            # Select paginated entries that have the selected tag (via EXISTS), but do not
-            # filter the outer JOIN on tags so GROUP_CONCAT includes all tags.
-            cur.execute(
-                """
-                SELECT d.id, d.title, GROUP_CONCAT(t.name SEPARATOR ',') AS tags
-                FROM diary d
-                LEFT JOIN diary_tags dt ON dt.diary_id = d.id
-                LEFT JOIN tags t ON t.id = dt.tag_id
-                                WHERE EXISTS (
-                                    SELECT 1 FROM diary_tags_closure dt2
-                                    JOIN tags t2 ON t2.id = dt2.tag_id
-                                    WHERE dt2.diary_id = d.id AND t2.name = %s
-                                )
-                GROUP BY d.id
-                ORDER BY d.created_at DESC
-                LIMIT %s OFFSET %s
-                """,
-                (selected_tag, per_page, offset)
-            )
+                cur.execute(
+                    """
+                    SELECT d.id, d.title, GROUP_CONCAT(t.name SEPARATOR ',') AS tags
+                    FROM diary d
+                    LEFT JOIN diary_tags dt ON dt.diary_id = d.id
+                    LEFT JOIN tags t ON t.id = dt.tag_id
+                    WHERE EXISTS (
+                      SELECT 1 FROM diary_tags dt2
+                      JOIN tags t2 ON t2.id = dt2.tag_id
+                      WHERE dt2.diary_id = d.id AND t2.id = %s
+                    )
+                    GROUP BY d.id
+                    ORDER BY d.created_at DESC
+                    LIMIT %s OFFSET %s
+                    """,
+                    (int(selected_tag), per_page, offset)
+                )
+            else:
+                cur.execute(
+                    """
+                    SELECT COUNT(DISTINCT d.id) AS cnt
+                    FROM diary d
+                    JOIN diary_tags dt2 ON dt2.diary_id = d.id
+                    JOIN tags t2 ON t2.id = dt2.tag_id
+                    WHERE t2.name = %s
+                    """,
+                    (selected_tag,)
+                )
+                total = cur.fetchone()['cnt']
+
+                cur.execute(
+                    """
+                    SELECT d.id, d.title, GROUP_CONCAT(t.name SEPARATOR ',') AS tags
+                    FROM diary d
+                    LEFT JOIN diary_tags dt ON dt.diary_id = d.id
+                    LEFT JOIN tags t ON t.id = dt.tag_id
+                    WHERE EXISTS (
+                      SELECT 1 FROM diary_tags dt2
+                      JOIN tags t2 ON t2.id = dt2.tag_id
+                      WHERE dt2.diary_id = d.id AND t2.name = %s
+                    )
+                    GROUP BY d.id
+                    ORDER BY d.created_at DESC
+                    LIMIT %s OFFSET %s
+                    """,
+                    (selected_tag, per_page, offset)
+                )
         else:
             # Count total entries for pagination
             cur.execute('SELECT COUNT(*) AS cnt FROM diary')

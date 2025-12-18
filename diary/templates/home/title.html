@@ -13,18 +13,7 @@
     .titles-list{ list-style:none; padding:0; margin:0; }
     .titles-list li{ padding:0.4rem 0; }
   </style>
-  <div style="margin-bottom:1rem">
-    <form method="get" action="{{ url_for('home.title') }}">
-      <label for="tag-filter">Filter by tag:</label>
-      <select id="tag-filter" name="tag" onchange="this.form.submit()">
-        <option value="">All tags</option>
-        {% for t in tags %}
-          <option value="{{ t.name }}" {% if selected_tag == t.name %}selected{% endif %}>{{ t.name }}</option>
-        {% endfor %}
-      </select>
-      <noscript><button type="submit">Filter</button></noscript>
-    </form>
-  </div>
+  <!-- Tag filter removed -->
 
   {% if entries %}
     <ul class="titles-list">
@@ -46,25 +35,27 @@
     </ul>
       {% if total_pages and total_pages > 1 %}
         <nav aria-label="Pagination" style="margin-top:1rem">
-          <div>
-            {% set qargs = {} %}
-            {% if selected_tag %}
-              {% set qargs = qargs.update({'tag': selected_tag}) %}
-            {% endif %}
-          </div>
-          <div>
-            {% if page > 1 %}
-              <a href="{{ url_for('home.title', tag=selected_tag, page=page-1) }}">&laquo; Prev</a>
-            {% else %}
-              <span style="color:#999">&laquo; Prev</span>
-            {% endif %}
-            <span style="margin:0 0.75rem">Page {{ page }} of {{ total_pages }}</span>
-            {% if page < total_pages %}
-              <a href="{{ url_for('home.title', tag=selected_tag, page=page+1) }}">Next &raquo;</a>
-            {% else %}
-              <span style="color:#999">Next &raquo;</span>
-            {% endif %}
-          </div>
+              <div>
+                {% if page > 1 %}
+                  {% if selected_tag %}
+                    <a href="{{ url_for('home.title', tag=selected_tag, page=page-1) }}">&laquo; Prev</a>
+                  {% else %}
+                    <a href="{{ url_for('home.title', page=page-1) }}">&laquo; Prev</a>
+                  {% endif %}
+                {% else %}
+                  <span style="color:#999">&laquo; Prev</span>
+                {% endif %}
+                <span style="margin:0 0.75rem">Page {{ page }} of {{ total_pages }}</span>
+                {% if page < total_pages %}
+                  {% if selected_tag %}
+                    <a href="{{ url_for('home.title', tag=selected_tag, page=page+1) }}">Next &raquo;</a>
+                  {% else %}
+                    <a href="{{ url_for('home.title', page=page+1) }}">Next &raquo;</a>
+                  {% endif %}
+                {% else %}
+                  <span style="color:#999">Next &raquo;</span>
+                {% endif %}
+              </div>
         </nav>
       {% endif %}
   {% else %}

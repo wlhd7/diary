@@ -41,10 +41,13 @@
     }
 
     try {
+      const parent = document.getElementById('parent_id');
+      const body = { name: name };
+      if (parent && parent.value) body.parent_id = parent.value;
       const resp = await fetch("{{ url_for('tags.create') }}", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name })
+        body: JSON.stringify(body)
       });
 
       if (resp.status === 201) {

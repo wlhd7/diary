@@ -185,11 +185,24 @@ def create():
     """
     data = request.get_json(silent=True)
     name = None
+    parent_id = None
     if data and 'name' in data:
         name = data.get('name', '').strip()
+        # accept optional parent_id from JSON
+        if 'parent_id' in data:
+            try:
+                parent_id = int(data.get('parent_id'))
+            except (TypeError, ValueError):
+                parent_id = None
     else:
         # fallback to form-encoded
         name = request.form.get('name', '').strip()
+        parent_raw = request.form.get('parent_id', '').strip()
+        if parent_raw:
+            try:
+                parent_id = int(parent_raw)
+            except (TypeError, ValueError):
+                parent_id = None
 
     if not name:
         return jsonify({'error': 'Tag name is required.'}), 400
@@ -197,7 +210,11 @@ def create():
     conn = get_db()
     try:
         with conn.cursor() as cur:
-            cur.execute('INSERT INTO tags (name) VALUES (%s)', (name,))
+            # insert with optional parent_id when provided
+            if parent_id is None:
+                cur.execute('INSERT INTO tags (name) VALUES (%s)', (name,))
+            else:
+                cur.execute('INSERT INTO tags (name, parent_id) VALUES (%s, %s)', (name, parent_id))
             tag_id = cur.lastrowid
     except pymysql.err.IntegrityError:
         return jsonify({'error': 'Tag already exists.'}), 409

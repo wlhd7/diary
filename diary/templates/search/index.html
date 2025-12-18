@@ -18,10 +18,10 @@
 				<h3>Results for "{{ q }}"</h3>
 				{% if results %}
 						<style>
-							.title-row{ display:flex; align-items:center; }
-							.title-text{ white-space:nowrap; }
-							.title-dots{ flex:1; border-bottom:1px dotted #888; margin:0 0.5rem; height:0.6em; }
-							.title-tags{ white-space:nowrap; font-size:0.95rem; }
+							.title-row{ display:flex; align-items:center; width:100%; }
+							.title-text{ flex:0 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+							.title-dots{ flex:1 1 auto; min-width:0; border-bottom:1px dotted #888; margin:0 0.5rem; height:0.6em; }
+							.title-tags{ white-space:nowrap; font-size:0.95rem; flex:0 0 auto; margin-left:0.5rem; }
 							.title-tags a{ text-decoration:none; color:inherit; }
 							.titles-list{ list-style:none; padding:0; margin:0; }
 							.titles-list li{ padding:0.4rem 0; }
@@ -32,14 +32,12 @@
 								<li>
 									<div class="title-row">
 										<div class="title-text"><a href="{{ url_for('diary.detail', id=e.id) }}">{{ e.title }}</a></div>
-										{% if e.tags %}
 											<div class="title-dots" aria-hidden="true"></div>
 											<div class="title-tags">
 												{% for t in e.tags.split(',') %}
 													<a href="{{ url_for('home.preview') }}?tag={{ t|urlencode }}">{{ t }}</a>{% if not loop.last %}, {% endif %}
 												{% endfor %}
 											</div>
-										{% endif %}
 									</div>
 								</li>
 							{% endfor %}
